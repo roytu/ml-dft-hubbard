@@ -3,6 +3,10 @@ from itertools import combinations
 import numpy as np
 from numpy import linalg as LA
 
+import logging
+#logging.basicConfig(level=logging.ERROR)
+logging.basicConfig(level=logging.DEBUG)
+
 class HubbardInstance(object):
     """ Instance of a 1-D Hubbard model with periodic boundary conditions
 
@@ -59,12 +63,12 @@ class HubbardInstance(object):
         For L = 8 and N_up = N_down = 2, dim(J) = 784
     """
 
-    def __init__(self, L=8, N_up=2, N_down=2):
+    def __init__(self, L=8, N_up=2, N_down=2, t=1, U=4):
         self.L      = L          # Number of sites
         self.N_up   = N_up       # Number of spin-up electrons
         self.N_down = N_down     # Number of spin-down electrons
-        self.t = 1
-        self.U = 4
+        self.t      = t          # Hopping parameter
+        self.U      = U          # Coulomb parameter
 
         # Universal
         self.basis = None
@@ -85,7 +89,6 @@ class HubbardInstance(object):
 
         # Construct H_T
         H_T = np.zeros((M, M), dtype=np.float64)
-        #print("Constructing H_T")
         for i in range(M):
             (x_up, x_down) = self.basis[i]
             for j in range(M):
@@ -105,23 +108,24 @@ class HubbardInstance(object):
                             H_T[i, j] = self.t
                         else:
                             H_T[i, j] = -self.t
-        #print(f"H_T = {H_T}")
+        logging.debug(f"H_T = ")
+        logging.debug(f"{H_T}")
         self.H_T = H_T
 
         # Construct H_U
-        #print("Constructing H_U")
         h_u = np.zeros(M, dtype=np.float64)
         for i, (x_up, x_down) in enumerate(self.basis):
             # Get the number of sites with two electrons
             h_u[i] = self.U * sum([1 for b in bin(x_up & x_down)[2:] if b == "1"])
         H_U = np.diag(h_u)
+        logging.debug(f"H_U = ")
+        logging.debug(f"{H_U}")
         self.H_U = H_U
 
     def generate_sample(self, v):
         M = len(self.basis)
 
         # Construct H_V
-        #print("Constructing H_V")
         h_v = np.zeros(M, dtype=np.float64)
         for i, (x_up, x_down) in enumerate(self.basis):
             # Convert integers into binary vectors
@@ -133,11 +137,13 @@ class HubbardInstance(object):
 
             h_v[i] = v_up + v_down
         H_V = np.diag(h_v)
-        #print(f"H_V = {H_V}")
+        logging.debug(f"H_V = ")
+        logging.debug(f"{H_V}")
 
         # Add all hamiltonians
         H = self.H_T + self.H_U + H_V
-        #print(f"H = {H}")
+        logging.debug(f"H = ")
+        logging.debug(f"{H}")
 
         # Compute ground state
         E_gnd, n_gnd = self.compute_ground_state(H)
@@ -155,7 +161,9 @@ class HubbardInstance(object):
         """
         w, v = LA.eigh(H)
         E_gnd = w[0]
-        p_gnd = v[0]
+        p_gnd = v[:, 0]
+        import pdb; pdb.set_trace()
+        logging.debug(f"p_gnd = {p_gnd}")
         n_gnd = p_gnd * p_gnd  # TODO: do we need to complex square this ever?
 
         # Convert p_gnd to n_gnd
@@ -172,7 +180,7 @@ class HubbardInstance(object):
 
         n_gnd = np.hstack([n_gnd_up, n_gnd_down])
 
-        #print(f"v = {v} -> E_gnd = {E_gnd}, n_gnd = {n_gnd}")
+        #logging.debug(f"v = {v} -> E_gnd = {E_gnd}, n_gnd = {n_gnd}")
 
         return E_gnd, n_gnd
 

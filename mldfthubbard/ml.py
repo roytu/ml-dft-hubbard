@@ -14,17 +14,18 @@ def create_dataset():
     N_up = 2
     N_down = 2
 
-    hi = HubbardInstance(L, N_up, N_down)
+    hi = HubbardInstance(L=L, N_up=N_up, N_down=N_down, t=1, U=4)
     hi.initialize()
 
-    SAMPLES = 52500
+    SAMPLES = 100
     E_gnds = []
     n_gnds = []
     t = time.time()
     for i in range(SAMPLES):
         # Set a random potential
-        W = 2.5  # Varies between 0.005t and 2.5t in the paper
+        W = 0.005  # Varies between 0.005t and 2.5t in the paper
         v = np.random.uniform(-W, W, L)
+        v = np.zeros(L)
         E_gnd, n_gnd = hi.generate_sample(v)
 
         E_gnds.append(E_gnd)
@@ -43,7 +44,7 @@ def create_dataset():
 
 def load_dataset():
     E_gnds = np.load("E_gnds.npy")
-    n_gnds = np.load("n_gnds.npy") * 4
+    n_gnds = np.load("n_gnds.npy")
 
     print(E_gnds)
     print(n_gnds)
@@ -53,12 +54,9 @@ def load_dataset():
     E_ress = []
     n_ress = []
 
-    print(n_gnds[0:100, :])
-    print(np.sum(n_gnds[0]))
-
     for i in range(len(n_gnds)):
         N = len(n_gnds[i])
-        hom = np.ones(N) * 2/8
+        hom = np.ones(N) * 1/4
 
         n_res = np.sqrt(np.sum((n_gnds[i] - hom) ** 2))
 
@@ -70,6 +68,6 @@ def load_dataset():
 
 
 if __name__ == "__main__":
-    #create_dataset()
+    create_dataset()
     load_dataset()
 
