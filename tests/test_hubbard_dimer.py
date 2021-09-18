@@ -28,8 +28,8 @@ def test_dimer():
     E_gnd_true = U/2 - np.sqrt((U/2) ** 2 + 4 * t ** 2)
     n_gnd_true = 0.5 * np.ones(4)
 
-    assert np.abs(E_gnd - E_gnd_true) < 1e-5
-    assert np.sum(np.abs(n_gnd - n_gnd_true)) < 1e-5
+    assert np.allclose(E_gnd, E_gnd_true)
+    assert np.allclose(n_gnd, n_gnd_true)
 
     print()
     print(f"E_gnd: {E_gnd}")

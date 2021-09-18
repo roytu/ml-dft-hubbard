@@ -19,13 +19,14 @@ def create_dataset():
     hi = HubbardInstance(L=L, N_up=N_up, N_down=N_down, t=t, U=U)
     hi.initialize()
 
-    SAMPLES = 10
+    SAMPLES = 52500
     E_gnds = []
     n_gnds = []
     it = time.time()
     for i in range(SAMPLES):
         # Set a random potential
-        W = 0.005  # Varies between 0.005t and 2.5t in the paper
+        #W = 0.005  # Varies between 0.005t and 2.5t in the paper
+        W = 2.5  # Varies between 0.005t and 2.5t in the paper
         v = np.random.uniform(-W, W, L)
         if i == 0:
             # First sample is always homogenous
@@ -44,15 +45,15 @@ def create_dataset():
     E_gnds = np.array(E_gnds)
     n_gnds = np.array(n_gnds)
 
-    np.save("E_gnds.npy", E_gnds)
-    np.save("n_gnds.npy", n_gnds)
+    np.save("npys/W_2.5_N_52500_002/E_gnds.npy", E_gnds)
+    np.save("npys/W_2.5_N_52500_002/n_gnds.npy", n_gnds)
 
 def load_dataset():
-    E_gnds = np.load("E_gnds.npy")
-    n_gnds = np.load("n_gnds.npy")
+    E_gnds = np.load("npys/W_2.5_N_52500_002/E_gnds.npy")
+    n_gnds = np.load("npys/W_2.5_N_52500_002/n_gnds.npy")
 
-    print(E_gnds)
-    print(n_gnds)
+    #print(E_gnds)
+    #print(n_gnds)
 
     plt.figure()
     plt.xlabel("$|n - n_{homo}|$")
@@ -67,7 +68,6 @@ def load_dataset():
     n_homo = np.ones(len(n_gnds[0])) * 1/4  # Force this because n_gnd for degenerate ground state spaces is poorly defined
 
     for i in range(len(n_gnds)):
-        print(np.sum(n_gnds[i]))
         # Calculate n residual
         n_res = np.sqrt(np.sum((n_gnds[i] - n_homo) ** 2))
 
@@ -83,6 +83,6 @@ def load_dataset():
 
 
 if __name__ == "__main__":
-    create_dataset()
+    #create_dataset()
     load_dataset()
 
