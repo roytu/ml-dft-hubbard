@@ -19,13 +19,14 @@ def create_dataset():
     hi = HubbardInstance(L=L, N_up=N_up, N_down=N_down, t=t, U=U)
     hi.initialize()
 
-    SAMPLES = 52500
+    SAMPLES = 1000
     E_gnds = []
     n_gnds = []
-    v_avgs = []
+    vs = []
     it = time.time()
     for i in range(SAMPLES):
         # Set a random potential
+        #W = 0.005  # Varies between 0.005t and 2.5t in the paper
         W = 2.5  # Varies between 0.005t and 2.5t in the paper
         v = np.random.uniform(-W, W, L)
 
@@ -39,6 +40,7 @@ def create_dataset():
 
         E_gnds.append(E_gnd)
         n_gnds.append(n_gnd)
+        vs.append(v)
 
         # Print progress every 1000th iteration
         if i % 1000 == 0 and i > 0:
@@ -48,14 +50,40 @@ def create_dataset():
 
     E_gnds = np.array(E_gnds)
     n_gnds = np.array(n_gnds)
+    vs = np.array(vs)
 
-    np.save("npys/W_2.5_N_52500_003/E_gnds.npy", E_gnds)
-    np.save("npys/W_2.5_N_52500_003/n_gnds.npy", n_gnds)
+    #np.save("npys/W_2.5_N_52500_004/E_gnds.npy", E_gnds)
+    #np.save("npys/W_2.5_N_52500_004/n_gnds.npy", n_gnds)
+
+    np.save("E_gnds.npy", E_gnds)
+    np.save("n_gnds.npy", n_gnds)
+    np.save("vs.npy", vs)
 
 def load_dataset():
-    E_gnds = np.load("npys/W_2.5_N_52500_003/E_gnds.npy")
-    n_gnds = np.load("npys/W_2.5_N_52500_003/n_gnds.npy")
+    E_gnds = np.load("E_gnds.npy")
+    n_gnds = np.load("n_gnds.npy")
+    vs = np.load("vs.npy")
 
+    # Plot all ns
+    plt.figure()
+    plt.ylabel("$n$")
+    for i in range(len(vs)):
+
+        plt.plot(n_gnds[i][0:8])
+    plt.show()
+
+    # Plot vs / n
+    #for i in range(len(vs)):
+    #    plt.figure()
+    #    plt.xlabel("$vs$")
+    #    plt.ylabel("$n$")
+
+    #    plt.plot(vs[i])
+    #    plt.plot(n_gnds[i][0:8])
+    #    plt.show()
+
+
+    # Plot n/E
     plt.figure()
     plt.xlabel("$|n - n_{homo}|$")
     plt.ylabel("$(E - E_{homo})$")
@@ -73,7 +101,6 @@ def load_dataset():
 
     for i in range(len(n_gnds)):
         # Calculate n residual
-        d = n_gnds[i] - n_homo
         n_res = np.sqrt(np.sum((n_gnds[i] - n_homo) ** 2))
 
         # Calculate E residual

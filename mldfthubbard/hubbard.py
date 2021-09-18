@@ -104,15 +104,15 @@ class HubbardInstance(object):
 
                 if x_up == y_up:
                     # Check if x_down and y_down are 1 hop away from each other
-                    if bin(x_down ^ y_down)[2:].count("1") == 2:
-                        if self.N_up % 2 == 0:
+                    if self._check_1hop(x_down, y_down):
+                        if self.N_down % 2 == 0:
                             H_T[i, j] = self.t
                         else:
                             H_T[i, j] = -self.t
                 elif x_down == y_down:
                     # Check if x_up and y_up are 1 hop away from each other
-                    if bin(x_up ^ y_up)[2:].count("1") == 2:
-                        if self.N_down % 2 == 0:
+                    if self._check_1hop(x_up, y_up):
+                        if self.N_up % 2 == 0:
                             H_T[i, j] = self.t
                         else:
                             H_T[i, j] = -self.t
@@ -211,6 +211,26 @@ class HubbardInstance(object):
         xs = list(combinations(range(L), n))
         bin_xs = sorted([sum([1 << c for c in cs]) for cs in xs])
         return bin_xs
+
+    def _check_1hop(self, up, down):
+        """ Check if two basis vectors are 1hop away.
+
+            TODO I am so sorry
+        """
+        def findall(p, s):
+            i = s.find(p)
+            while i != -1:
+                yield i
+                i = s.find(p, i+1)
+
+        res = bin(up ^ down)[2:]
+        if res.count("1") == 2:
+            # Find the indices of the hopping electrons and check they are neighbors
+            idxs = list(findall("1", res))
+            a, b = idxs[0], idxs[1]
+            if abs(a - b) == 1 or abs(a - b) == self.L - 1:
+                return True
+        return False
 
     def print_basis(self):
         def to_bin(x):
