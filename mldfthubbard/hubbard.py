@@ -1,11 +1,14 @@
 
+import sys
 from itertools import combinations
 import numpy as np
 from numpy import linalg as LA
 
 import logging
-#logging.basicConfig(level=logging.ERROR)
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.ERROR)
+
+# Don't truncate matrices
+#np.set_printoptions(threshold=sys.maxsize)
 
 class HubbardInstance(object):
     """ Instance of a 1-D Hubbard model with periodic boundary conditions
@@ -75,9 +78,12 @@ class HubbardInstance(object):
         self.H_T = None
         self.H_U = None
 
+        self.logger = logging.getLogger(__name__)
+        self.logger.setLevel(logging.ERROR)
+
     def initialize(self):
         # Generate basis vectors
-        cs_up = HubbardInstance.__combinations_binary(self.L, self.N_up)
+        cs_up   = HubbardInstance.__combinations_binary(self.L, self.N_up)
         cs_down = HubbardInstance.__combinations_binary(self.L, self.N_down)
 
         basis = []
@@ -88,7 +94,7 @@ class HubbardInstance(object):
         M = len(self.basis)
 
         # Construct H_T
-        H_T = np.zeros((M, M), dtype=np.float64)
+        H_T = np.zeros((M, M), dtype=np.float32)
         for i in range(M):
             (x_up, x_down) = self.basis[i]
             for j in range(M):
@@ -96,54 +102,58 @@ class HubbardInstance(object):
 
                 if x_up == y_up:
                     # Check if x_down and y_down are 1 hop away from each other
-                    if sum([1 for b in bin(x_down ^ y_down)[2:] if b == "1"]) == 2:
+                    if bin(x_down ^ y_down)[2:].count("1") == 2:
                         if self.N_up % 2 == 0:
                             H_T[i, j] = self.t
                         else:
                             H_T[i, j] = -self.t
                 elif x_down == y_down:
                     # Check if x_up and y_up are 1 hop away from each other
-                    if sum([1 for b in bin(x_up ^ y_up)[2:] if b == "1"]) == 2:
+                    if bin(x_up ^ y_up)[2:].count("1") == 2:
                         if self.N_down % 2 == 0:
                             H_T[i, j] = self.t
                         else:
                             H_T[i, j] = -self.t
-        logging.debug(f"H_T = ")
-        logging.debug(f"{H_T}")
+        self.logger.info(f"H_T = ")
+        self.logger.info(f"{H_T}")
         self.H_T = H_T
 
+        # Sanity check that this is symmetric
+        assert np.allclose(H_T, H_T.T)
+
         # Construct H_U
-        h_u = np.zeros(M, dtype=np.float64)
+        h_u = np.zeros(M, dtype=np.float32)
         for i, (x_up, x_down) in enumerate(self.basis):
             # Get the number of sites with two electrons
-            h_u[i] = self.U * sum([1 for b in bin(x_up & x_down)[2:] if b == "1"])
+            h_u[i] = self.U * bin(x_up & x_down)[2:].count("1")
         H_U = np.diag(h_u)
-        logging.debug(f"H_U = ")
-        logging.debug(f"{H_U}")
+        self.logger.info(f"H_U = ")
+        self.logger.info(f"{H_U}")
         self.H_U = H_U
 
     def generate_sample(self, v):
         M = len(self.basis)
 
         # Construct H_V
-        h_v = np.zeros(M, dtype=np.float64)
+        h_v = np.zeros(M, dtype=np.float32)
         for i, (x_up, x_down) in enumerate(self.basis):
             # Convert integers into binary vectors
-            b_up = [int(c) for c in str(bin(x_up)[2:]).rjust(self.L, "0")]
+            b_up = [int(c) for c in bin(x_up)[2:].rjust(self.L, "0")]
             v_up = np.dot(v, b_up)
 
-            b_down = [int(c) for c in str(bin(x_down)[2:]).rjust(self.L, "0")]
+            b_down = [int(c) for c in bin(x_down)[2:].rjust(self.L, "0")]
             v_down = np.dot(v, b_down)
 
             h_v[i] = v_up + v_down
         H_V = np.diag(h_v)
-        logging.debug(f"H_V = ")
-        logging.debug(f"{H_V}")
+        self.logger.info(f"H_V = ")
+        self.logger.info(f"{H_V}")
 
         # Add all hamiltonians
         H = self.H_T + self.H_U + H_V
-        logging.debug(f"H = ")
-        logging.debug(f"{H}")
+        self.logger.info(f"H = ")
+        self.logger.info(f"{H}")
+        self.H = H
 
         # Compute ground state
         E_gnd, n_gnd = self.compute_ground_state(H)
@@ -161,14 +171,14 @@ class HubbardInstance(object):
         """
         w, v = LA.eigh(H)
         E_gnd = w[0]
+        self.logger.info(f"E_gnd = {E_gnd}")
         p_gnd = v[:, 0]
-        import pdb; pdb.set_trace()
-        logging.debug(f"p_gnd = {p_gnd}")
+        self.logger.info(f"p_gnd = {p_gnd}")
         n_gnd = p_gnd * p_gnd  # TODO: do we need to complex square this ever?
 
         # Convert p_gnd to n_gnd
-        n_gnd_up = np.zeros(self.L, dtype=np.float64)
-        n_gnd_down = np.zeros(self.L, dtype=np.float64)
+        n_gnd_up = np.zeros(self.L, dtype=np.float32)
+        n_gnd_down = np.zeros(self.L, dtype=np.float32)
 
         for i in range(self.L):
             b_up =   np.array([1 if (up   & (1 << (self.L - 1 - i))) > 0 else 0 for (up, down) in self.basis])
@@ -180,7 +190,7 @@ class HubbardInstance(object):
 
         n_gnd = np.hstack([n_gnd_up, n_gnd_down])
 
-        #logging.debug(f"v = {v} -> E_gnd = {E_gnd}, n_gnd = {n_gnd}")
+        #self.logger.info(f"v = {v} -> E_gnd = {E_gnd}, n_gnd = {n_gnd}")
 
         return E_gnd, n_gnd
 
