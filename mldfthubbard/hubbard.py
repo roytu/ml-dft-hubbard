@@ -5,7 +5,9 @@ import numpy as np
 from numpy import linalg as LA
 
 import logging
-logging.basicConfig(level=logging.ERROR)
+
+LOG_LEVEL = logging.WARN
+logging.basicConfig(level=LOG_LEVEL)
 
 # Don't truncate matrices
 #np.set_printoptions(threshold=sys.maxsize)
@@ -79,7 +81,7 @@ class HubbardInstance(object):
         self.H_U = None
 
         self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(logging.ERROR)
+        self.logger.setLevel(LOG_LEVEL)
 
     def initialize(self):
         # Generate basis vectors
@@ -94,7 +96,7 @@ class HubbardInstance(object):
         M = len(self.basis)
 
         # Construct H_T
-        H_T = np.zeros((M, M), dtype=np.float32)
+        H_T = np.zeros((M, M), dtype=np.float64)
         for i in range(M):
             (x_up, x_down) = self.basis[i]
             for j in range(M):
@@ -114,28 +116,28 @@ class HubbardInstance(object):
                             H_T[i, j] = self.t
                         else:
                             H_T[i, j] = -self.t
-        self.logger.info(f"H_T = ")
-        self.logger.info(f"{H_T}")
+        self.logger.debug(f"H_T = ")
+        self.logger.debug(f"{H_T}")
         self.H_T = H_T
 
         # Sanity check that this is symmetric
         assert np.allclose(H_T, H_T.T)
 
         # Construct H_U
-        h_u = np.zeros(M, dtype=np.float32)
+        h_u = np.zeros(M, dtype=np.float64)
         for i, (x_up, x_down) in enumerate(self.basis):
             # Get the number of sites with two electrons
             h_u[i] = self.U * bin(x_up & x_down)[2:].count("1")
         H_U = np.diag(h_u)
-        self.logger.info(f"H_U = ")
-        self.logger.info(f"{H_U}")
+        self.logger.debug(f"H_U = ")
+        self.logger.debug(f"{H_U}")
         self.H_U = H_U
 
     def generate_sample(self, v):
         M = len(self.basis)
 
         # Construct H_V
-        h_v = np.zeros(M, dtype=np.float32)
+        h_v = np.zeros(M, dtype=np.float64)
         for i, (x_up, x_down) in enumerate(self.basis):
             # Convert integers into binary vectors
             b_up = [int(c) for c in bin(x_up)[2:].rjust(self.L, "0")]
@@ -146,13 +148,13 @@ class HubbardInstance(object):
 
             h_v[i] = v_up + v_down
         H_V = np.diag(h_v)
-        self.logger.info(f"H_V = ")
-        self.logger.info(f"{H_V}")
+        self.logger.debug(f"H_V = ")
+        self.logger.debug(f"{H_V}")
 
         # Add all hamiltonians
         H = self.H_T + self.H_U + H_V
-        self.logger.info(f"H = ")
-        self.logger.info(f"{H}")
+        self.logger.debug(f"H = ")
+        self.logger.debug(f"{H}")
         self.H = H
 
         # Compute ground state
@@ -170,27 +172,34 @@ class HubbardInstance(object):
                 (E_gnd, ground state density)
         """
         w, v = LA.eigh(H)
+
+        # Check for ground state degeneracy
+        if np.abs(w[0] - w[1]) < 1e-10:
+            self.logger.warn(f"GND state degeneracy: {w[0:5]}")
+
         E_gnd = w[0]
         self.logger.info(f"E_gnd = {E_gnd}")
         p_gnd = v[:, 0]
         self.logger.info(f"p_gnd = {p_gnd}")
-        n_gnd = p_gnd * p_gnd  # TODO: do we need to complex square this ever?
+        n_gnd = p_gnd ** 2  # TODO: do we need to complex square this ever?
 
         # Convert p_gnd to n_gnd
-        n_gnd_up = np.zeros(self.L, dtype=np.float32)
-        n_gnd_down = np.zeros(self.L, dtype=np.float32)
+        n_gnd_up = np.zeros(self.L, dtype=np.float64)
+        n_gnd_down = np.zeros(self.L, dtype=np.float64)
 
         for i in range(self.L):
-            b_up =   np.array([1 if (up   & (1 << (self.L - 1 - i))) > 0 else 0 for (up, down) in self.basis])
-            b_down = np.array([1 if (down & (1 << (self.L - 1 - i))) > 0 else 0 for (up, down) in self.basis])
+            b_up =   np.array([(up   >> (self.L - 1 - i)) & 1 for (up, down) in self.basis])
+            b_down = np.array([(down >> (self.L - 1 - i)) & 1 for (up, down) in self.basis])
 
             # Convert occupation to density
             n_gnd_up[i]   = np.dot(n_gnd, b_up)
             n_gnd_down[i] = np.dot(n_gnd, b_down)
 
+        if not (np.abs(w[0] - w[1]) < 1e-10):
+            assert np.allclose(n_gnd_up, n_gnd_down)
         n_gnd = np.hstack([n_gnd_up, n_gnd_down])
 
-        #self.logger.info(f"v = {v} -> E_gnd = {E_gnd}, n_gnd = {n_gnd}")
+        self.logger.info(f"v = {v} -> E_gnd = {E_gnd}, n_gnd = {n_gnd}")
 
         return E_gnd, n_gnd
 
