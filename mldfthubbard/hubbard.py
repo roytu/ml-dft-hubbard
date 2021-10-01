@@ -66,6 +66,25 @@ class HubbardInstance(object):
             dim(J) = (L choose N_up) * (L choose N_down)
 
         For L = 8 and N_up = N_down = 2, dim(J) = 784
+
+        The 0-index is chosen to be the far-left bit.
+
+        NOTE ABOUT CONSTRUCTING H_T:
+
+        The non-zero values of H_T are +/- t, where the sign is derived from the anti-communtation of the fermions.
+        Each non-zero value takes the form:
+
+        -t ( <0| c ... c^{\dag} c ... c^{\dag} |0> )
+
+        After some math, I believe the following is true:
+
+        * If the hop is not over the periodic boundary, the contribution is always -t
+        * If the hop is over the periodic boundary, the contribution is:
+            * +t if the number of same-spin electrons is even
+            * -t if the number of same-spin electrons is odd
+
+        TODO check this against analytical solutions
+
     """
 
     def __init__(self, L=8, N_up=2, N_down=2, t=1, U=4):
@@ -104,16 +123,24 @@ class HubbardInstance(object):
 
                 if x_up == y_up:
                     # Check if x_down and y_down are 1 hop away from each other
-                    if self._check_1hop(x_down, y_down):
-                        if self.N_down % 2 == 0:
-                            H_T[i, j] = self.t
+                    valid, is_periodic = self._check_1hop(x_down, y_down)
+                    if valid:
+                        if is_periodic:
+                            if self.N_down % 2 == 0:
+                                H_T[i, j] = self.t
+                            else:
+                                H_T[i, j] = -self.t
                         else:
                             H_T[i, j] = -self.t
                 elif x_down == y_down:
                     # Check if x_up and y_up are 1 hop away from each other
-                    if self._check_1hop(x_up, y_up):
-                        if self.N_up % 2 == 0:
-                            H_T[i, j] = self.t
+                    valid, is_periodic = self._check_1hop(x_up, y_up)
+                    if valid:
+                        if is_periodic:
+                            if self.N_up % 2 == 0:
+                                H_T[i, j] = self.t
+                            else:
+                                H_T[i, j] = -self.t
                         else:
                             H_T[i, j] = -self.t
         self.logger.debug(f"H_T = ")
@@ -150,6 +177,7 @@ class HubbardInstance(object):
         H_V = np.diag(h_v)
         self.logger.debug(f"H_V = ")
         self.logger.debug(f"{H_V}")
+        self.H_V = H_V
 
         # Add all hamiltonians
         H = self.H_T + self.H_U + H_V
@@ -215,6 +243,10 @@ class HubbardInstance(object):
     def _check_1hop(self, up, down):
         """ Check if two basis vectors are 1hop away.
 
+            Returns:
+                result: True or False
+                periodic: if True, whether the hop was over the periodic boundary
+
             TODO I am so sorry
         """
         def findall(p, s):
@@ -228,9 +260,11 @@ class HubbardInstance(object):
             # Find the indices of the hopping electrons and check they are neighbors
             idxs = list(findall("1", res))
             a, b = idxs[0], idxs[1]
-            if abs(a - b) == 1 or abs(a - b) == self.L - 1:
-                return True
-        return False
+            if abs(a - b) == 1:
+                return True, False  # Hop not over periodic boundary
+            elif abs(a - b) == self.L - 1:
+                return True, True  # Hop over periodic boundary
+        return False, False  # Not 1hop
 
     def print_basis(self):
         def to_bin(x):

@@ -35,3 +35,36 @@ def test_dimer():
     print(f"E_gnd: {E_gnd}")
     print(f"n_gnd: {n_gnd}")
 
+    # Create Hubbard dimer with custom external potential
+    # Check Hamiltonians
+
+    t = 1
+    U = 1
+    hi = HubbardInstance(L=2, N_up=1, N_down=1, t=t, U=U)
+    hi.initialize()
+    v = np.array([2, 3])
+
+    E_gnd, n_gnd = hi.generate_sample(v)
+
+    print(f"H_T = {hi.H_T}")
+    print(f"H_U = {hi.H_U}")
+    print(f"H_V = {hi.H_V}")
+
+    assert np.allclose(hi.H_T, \
+            [[ 0, -1, -1,  0], \
+             [-1,  0,  0, -1], \
+             [-1,  0,  0, -1], \
+             [ 0, -1, -1,  0]])
+
+    assert np.allclose(hi.H_U, \
+            [[ 1,  0,  0,  0], \
+             [ 0,  0,  0,  0], \
+             [ 0,  0,  0,  0], \
+             [ 0,  0,  0,  1]])
+
+    assert np.allclose(hi.H_V, \
+            [[ 6,  0,  0,  0], \
+             [ 0,  5,  0,  0], \
+             [ 0,  0,  5,  0], \
+             [ 0,  0,  0,  4]])
+

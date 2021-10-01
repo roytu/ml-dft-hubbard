@@ -8,7 +8,7 @@ from hubbard import HubbardInstance
 
 import matplotlib.pyplot as plt
 
-def create_dataset():
+def create_dataset(W=2.5):
     # Create problem instance
     L = 8
     N_up = 2
@@ -19,7 +19,7 @@ def create_dataset():
     hi = HubbardInstance(L=L, N_up=N_up, N_down=N_down, t=t, U=U)
     hi.initialize()
 
-    SAMPLES = 1000
+    SAMPLES = 100
     E_gnds = []
     n_gnds = []
     vs = []
@@ -27,7 +27,8 @@ def create_dataset():
     for i in range(SAMPLES):
         # Set a random potential
         #W = 0.005  # Varies between 0.005t and 2.5t in the paper
-        W = 2.5  # Varies between 0.005t and 2.5t in the paper
+        #W = 2.5  # Varies between 0.005t and 2.5t in the paper
+        #W = 1000000  # Varies between 0.005t and 2.5t in the paper
         v = np.random.uniform(-W, W, L)
 
         # Subtract out bias
@@ -43,7 +44,7 @@ def create_dataset():
         vs.append(v)
 
         # Print progress every 1000th iteration
-        if i % 1000 == 0 and i > 0:
+        if i % 1 == 0 and i > 0:
             dt = time.time() - it
             print(f"{i} / {SAMPLES}: {dt} s")
             it = time.time()
@@ -55,66 +56,82 @@ def create_dataset():
     #np.save("npys/W_2.5_N_52500_004/E_gnds.npy", E_gnds)
     #np.save("npys/W_2.5_N_52500_004/n_gnds.npy", n_gnds)
 
-    np.save("E_gnds.npy", E_gnds)
-    np.save("n_gnds.npy", n_gnds)
-    np.save("vs.npy", vs)
+    np.save(f"E_gnds_{W}.npy", E_gnds)
+    np.save(f"n_gnds_{W}.npy", n_gnds)
+    #np.save("vs.npy", vs)
 
-def load_dataset():
-    E_gnds = np.load("E_gnds.npy")
-    n_gnds = np.load("n_gnds.npy")
-    vs = np.load("vs.npy")
+def load_dataset(Ws):
+    #E_gnds = np.load("E_gnds.npy")
+    #n_gnds = np.load("n_gnds.npy")
+    #vs = np.load("vs.npy")
 
     # Plot all ns
-    plt.figure()
-    plt.ylabel("$n$")
-    for i in range(len(vs)):
+    #plt.figure()
+    #plt.ylabel("$n$")
+    #for i in range(len(vs)):
 
-        plt.plot(n_gnds[i][0:8])
-    plt.show()
+    #    plt.plot(n_gnds[i][0:8])
+    #plt.show()
 
     # Plot vs / n
     #for i in range(len(vs)):
-    #    plt.figure()
-    #    plt.xlabel("$vs$")
-    #    plt.ylabel("$n$")
 
-    #    plt.plot(vs[i])
-    #    plt.plot(n_gnds[i][0:8])
+    #    fig, ax1 = plt.subplots()
+    #    ax1.set_xlabel("Site")
+
+    #    # vs
+    #    ax1.set_ylabel("$vs$")
+    #    ax1.plot(vs[i], label="vs", color="tab:red")
+
+    #    # ns
+    #    ax2 = ax1.twinx()
+    #    ax2.set_ylabel("ns")
+    #    ax2.plot(n_gnds[i][0:8], label="ns", color="tab:blue")
+
+    #    fig.tight_layout()
     #    plt.show()
 
 
-    # Plot n/E
+    ## Plot n/E
     plt.figure()
     plt.xlabel("$|n - n_{homo}|$")
     plt.ylabel("$(E - E_{homo})$")
 
-    E_ress = []
-    n_ress = []
+    for W in Ws:
+        E_gnds = np.load(f"E_gnds_{W}.npy")
+        n_gnds = np.load(f"n_gnds_{W}.npy")
+        #vs = np.load("vs.npy")
 
-    # First sample is always E_homo / n_homo
-    E_homo = E_gnds[0]
-    #n_homo = n_gnds[0]
+        E_ress = []
+        n_ress = []
 
-    L = 8
-    N = 4
-    n_homo = np.ones(L * 2) / N  # Force this because n_gnd for degenerate ground state spaces is poorly defined
+        # First sample is always E_homo / n_homo
+        E_homo = E_gnds[0]
+        #n_homo = n_gnds[0]
 
-    for i in range(len(n_gnds)):
-        # Calculate n residual
-        n_res = np.sqrt(np.sum((n_gnds[i] - n_homo) ** 2))
+        L = 8
+        N = 4
+        n_homo = np.ones(L * 2) / N  # Force this because n_gnd for degenerate ground state spaces is poorly defined
 
-        # Calculate E residual
-        E_res = (E_gnds[i] - E_homo)
+        for i in range(len(n_gnds)):
+            # Calculate n residual
+            n_res = np.sqrt(np.sum((n_gnds[i] - n_homo) ** 2))
 
-        # Append results
-        E_ress.append(E_res)
-        n_ress.append(n_res)
+            # Calculate E residual
+            E_res = (E_gnds[i] - E_homo)
 
-    plt.scatter(n_ress, E_ress)
+            # Append results
+            E_ress.append(E_res)
+            n_ress.append(n_res)
+
+        plt.scatter(n_ress, E_ress, label=W)
+    plt.legend()
     plt.show()
 
 
 if __name__ == "__main__":
-    create_dataset()
-    load_dataset()
+    Ws = [0.01, 0.100, 1, 2, 2.5]
+    for W in Ws:
+        create_dataset(W)
+    load_dataset(Ws)
 

@@ -14,10 +14,10 @@ def test_1hop():
     hi = HubbardInstance(L=L, N_up=N_up, N_down=N_down, t=t, U=U)
     hi.initialize()
 
-    assert hi._check_1hop(3, 5) == True
-    assert hi._check_1hop(5, 6) == True
-    assert hi._check_1hop(3, 130) == True
-    assert hi._check_1hop(3, 6) == False
+    assert hi._check_1hop(3, 5) == (True, False)
+    assert hi._check_1hop(5, 6) == (True, False)
+    assert hi._check_1hop(3, 130) == (True, True)
+    assert hi._check_1hop(3, 6) == (False, False)
 
 
 
