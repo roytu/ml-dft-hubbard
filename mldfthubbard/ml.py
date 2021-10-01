@@ -19,7 +19,7 @@ def create_dataset(W=2.5):
     hi = HubbardInstance(L=L, N_up=N_up, N_down=N_down, t=t, U=U)
     hi.initialize()
 
-    SAMPLES = 100
+    SAMPLES = 52500
     E_gnds = []
     n_gnds = []
     vs = []
@@ -44,7 +44,7 @@ def create_dataset(W=2.5):
         vs.append(v)
 
         # Print progress every 1000th iteration
-        if i % 1 == 0 and i > 0:
+        if i % 1000 == 0 and i > 0:
             dt = time.time() - it
             print(f"{i} / {SAMPLES}: {dt} s")
             it = time.time()
@@ -58,7 +58,7 @@ def create_dataset(W=2.5):
 
     np.save(f"E_gnds_{W}.npy", E_gnds)
     np.save(f"n_gnds_{W}.npy", n_gnds)
-    #np.save("vs.npy", vs)
+    np.save(f"vs_{W}.npy", vs)
 
 def load_dataset(Ws):
     #E_gnds = np.load("E_gnds.npy")
@@ -130,7 +130,7 @@ def load_dataset(Ws):
 
 
 if __name__ == "__main__":
-    Ws = [0.01, 0.100, 1, 2, 2.5]
+    Ws = [0.005, 0.010, 0.1, 1, 2.5]
     for W in Ws:
         create_dataset(W)
     load_dataset(Ws)
