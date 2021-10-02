@@ -9,3 +9,9 @@ conda activate compchem
 python hubbard.py
 ```
 
+
+# Other Papers
+
+The convention for the basis states is from:
+
+https://arxiv.org/pdf/1204.3425.pdf
