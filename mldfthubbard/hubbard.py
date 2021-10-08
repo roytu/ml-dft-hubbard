@@ -188,6 +188,12 @@ class HubbardInstance(object):
         # Compute ground state
         E_gnd, n_gnd = self.compute_ground_state(H)
 
+        # Compute expectation values
+        self.exp_H   = self.p_gnd.T.dot(self.H).dot(self.p_gnd)
+        self.exp_H_T = self.p_gnd.T.dot(self.H_T).dot(self.p_gnd)
+        self.exp_H_U = self.p_gnd.T.dot(self.H_U).dot(self.p_gnd)
+        self.exp_H_V = self.p_gnd.T.dot(self.H_V).dot(self.p_gnd)
+
         return E_gnd, n_gnd
 
     def compute_ground_state(self, H):
@@ -209,6 +215,9 @@ class HubbardInstance(object):
         self.logger.info(f"E_gnd = {E_gnd}")
         p_gnd = v[:, 0]
         self.logger.info(f"p_gnd = {p_gnd}")
+
+        self.p_gnd = p_gnd  # Save for debugging purposes
+
         n_gnd = p_gnd ** 2  # TODO: do we need to complex square this ever?
 
         # Convert p_gnd to n_gnd
