@@ -96,6 +96,7 @@ def run_experiment(SAMPLES, L=8, N_up=2, N_down=2, t=1, U=4, W=2.5, set_v=None):
     exp_H_Vs = np.array(exp_H_Vs)
 
     results = Results()
+    results.SAMPLES = SAMPLES
     results.L = L
     results.W = W
     results.t = t

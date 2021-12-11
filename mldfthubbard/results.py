@@ -8,6 +8,7 @@ import numpy as np
 
 class Results(object):
     def __init__(self):
+        self.SAMPLES = None
         self.L = None
         self.W = None
         self.t = None
@@ -38,6 +39,7 @@ class Results(object):
             print(f"Writing to {filename}...")
             np.save(f"{filename}", values)
 
+        _verbose_save(f"{direc}/SAMPLES.npy", self.SAMPLES)
         _verbose_save(f"{direc}/L.npy", self.L)
         _verbose_save(f"{direc}/W.npy", self.W)
         _verbose_save(f"{direc}/t.npy", self.t)
@@ -61,6 +63,7 @@ class Results(object):
         # Save npy files
         print(f"Loading from {direc}...")
 
+        self.SAMPLES = np.load(f"{direc}/SAMPLES.npy")
         self.L = np.load(f"{direc}/L.npy")
         self.W = np.load(f"{direc}/W.npy")
         self.t = np.load(f"{direc}/t.npy")
@@ -78,6 +81,7 @@ class Results(object):
         """
 
         s = ""
+        s += f"SAMPLES = {self.SAMPLES}\n"
         s += f"L = {self.L}\n"
         s += f"W = {self.W}\n"
         s += f"t = {self.t}\n"
