@@ -6,9 +6,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 try:
-    from tqdm.notebook import trange, tqdm
+    from tqdm.notebook import trange
 except ImportError:
-    tqdm = None
+    trange = range
 
 from .hubbard import HubbardInstance
 from .results import Results
@@ -27,13 +27,6 @@ def run_experiment(SAMPLES, L=8, N_up=2, N_down=2, t=1, U=4, W=2.5, set_v=None):
         Results object
     """
 
-    # Initialize tqdm if it exists
-
-    if tqdm is None:
-        pbar = None
-    else:
-        pbar = tqdm.tqdm(total=SAMPLES)
-
     # Create problem instance
     hi = HubbardInstance(L=L, N_up=N_up, N_down=N_down, t=t, U=U)
     hi.initialize()
@@ -48,7 +41,7 @@ def run_experiment(SAMPLES, L=8, N_up=2, N_down=2, t=1, U=4, W=2.5, set_v=None):
     exp_H_Vs = []
 
     it = time.time()
-    for i in range(SAMPLES):
+    for i in trange(SAMPLES):
         # Set a random potential
         #W = 0.005  # Varies between 0.005t and 2.5t in the paper
         #W = 2.5  # Varies between 0.005t and 2.5t in the paper
@@ -74,14 +67,11 @@ def run_experiment(SAMPLES, L=8, N_up=2, N_down=2, t=1, U=4, W=2.5, set_v=None):
         exp_H_Us.append(hi.exp_H_U)
         exp_H_Vs.append(hi.exp_H_V)
 
-        if pbar:
-            pbar.update(i)
-        else:
-            # Print progress every 1000th iteration
-            if i % 1000 == 0 and i > 0:
-                dt = time.time() - it
-                print(f"{i} / {SAMPLES}: {dt} s")
-                it = time.time()
+        # Print progress every 1000th iteration
+        #if i % 1000 == 0 and i > 0:
+        #    dt = time.time() - it
+        #    print(f"{i} / {SAMPLES}: {dt} s")
+        #    it = time.time()
 
 
     # Save to CSV
