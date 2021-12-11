@@ -1,14 +1,12 @@
 
 import time
 import tensorflow as tf
-from tensorflow import keras
-
 import numpy as np
-from hubbard import HubbardInstance
 
 import matplotlib.pyplot as plt
 
-from results import Results
+from .hubbard import HubbardInstance
+from .results import Results
 
 
 def run_experiment(SAMPLES, L=8, N_up=2, N_down=2, t=1, U=4, W=2.5, set_v=None):
