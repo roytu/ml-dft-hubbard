@@ -1,9 +1,9 @@
 """ Generate test plots """
 
 import numpy as np
-from hubbard import HubbardInstance
-
 import matplotlib.pyplot as plt
+
+from .hubbard import HubbardInstance
 
 def gen_increasing_t():
     """ Generate a plot with a random external potential and 
