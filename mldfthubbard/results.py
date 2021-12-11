@@ -5,6 +5,8 @@ import time
 from datetime import datetime
 import numpy as np
 
+import matplotlib.pyplot as plt
+
 
 class Results(object):
     def __init__(self):
@@ -89,7 +91,7 @@ class Results(object):
 
     def plot_vs_over_n(self):
         # Plot vs / n
-        for i in range(len(vs)):
+        for i in range(len(self.vs)):
 
             fig, ax1 = plt.subplots()
             ax1.set_xlabel("Site")
@@ -111,7 +113,7 @@ class Results(object):
         # Plot all ns
         plt.figure()
         plt.ylabel("$n$")
-        for i in range(len(vs)):
+        for i in range(len(self.vs)):
             plt.plot(self.n_gnds[i][0:8])
         plt.show()
 
@@ -144,7 +146,7 @@ class Results(object):
             E_ress.append(E_res)
             n_ress.append(n_res)
 
-        plt.scatter(n_ress, E_ress, label=W)
+        plt.scatter(n_ress, E_ress, label=self.W)
         plt.legend()
         plt.show()
 
