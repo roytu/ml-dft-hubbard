@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 try:
-    import tqdm
+    from tqdm.notebook import trange, tqdm
 except ImportError:
     tqdm = None
 
