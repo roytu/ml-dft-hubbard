@@ -21,17 +21,16 @@ class Results(object):
         self.exp_H_Us = None
         self.exp_H_Vs = None
 
-    def save(self, name=None):
-        """ Saves the results in results/<DIRECTORY>.
+    def save(self, direc=None):
+        """ Saves the results in <DIRECTORY>.
 
-            Returns the name (useful for auto-generated results).
+            Returns the direc (useful for auto-generated results).
         """
 
-        if name is None:
+        if direc is None:
             now = datetime.now()
-            name = now.strftime("%Y%m%d_%H%M%S")
+            direc = "results/" + now.strftime("%Y%m%d_%H%M%S")
 
-        direc = f"results/{name}"
         os.makedirs(direc, exist_ok=True)
 
         # Save npy files
@@ -52,13 +51,11 @@ class Results(object):
         _verbose_save(f"{direc}/exp_H_Us.npy", self.exp_H_Us)
         _verbose_save(f"{direc}/exp_H_Vs.npy", self.exp_H_Vs)
 
-        return name
+        return direc
 
-    def load(self, name):
-        """ Loads the results in results/<DIRECTORY>.
+    def load(self, direc):
+        """ Loads the results in <DIRECTORY>.
         """
-
-        direc = f"results/{name}"
 
         # Save npy files
         print(f"Loading from {direc}...")
