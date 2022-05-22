@@ -1,0 +1,4 @@
+# This file is used internally by FFMPEG.
+file 'file:/home/poboy/ml-dft-hubbard/mldfthubbard/media/videos/manim_test/480p15/partial_movie_files/MovingDots/3163782288_1476184621_3749877504.mp4'
+file 'file:/home/poboy/ml-dft-hubbard/mldfthubbard/media/videos/manim_test/480p15/partial_movie_files/MovingDots/2201830969_826932818_3749369603.mp4'
+file 'file:/home/poboy/ml-dft-hubbard/mldfthubbard/media/videos/manim_test/480p15/partial_movie_files/MovingDots/2201830969_3503346753_2734992160.mp4'

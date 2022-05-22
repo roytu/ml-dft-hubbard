@@ -10,8 +10,8 @@ try:
 except ImportError:
     trange = range
 
-from .hubbard import HubbardInstance
-from .results import Results
+from hubbard import HubbardInstance
+from results import Results
 
 
 def run_experiment(SAMPLES, L=8, N_up=2, N_down=2, t=1, U=4, W=2.5, set_v=None):
@@ -28,8 +28,20 @@ def run_experiment(SAMPLES, L=8, N_up=2, N_down=2, t=1, U=4, W=2.5, set_v=None):
     """
 
     # Create problem instance
-    hi = HubbardInstance(L=L, N_up=N_up, N_down=N_down, t=t, U=U)
-    hi.initialize()
+
+    L = 8
+    hi = HubbardInstance.make_periodic_1d_chain(L)
+
+    # Add electrons
+    hi.N_up = 2
+    hi.N_down = 2
+
+    # Graph
+    hi.update_basis()
+    #hi.print_basis()
+
+    #hi.graph()
+
 
     E_gnds = []
     n_gnds = []
@@ -57,7 +69,21 @@ def run_experiment(SAMPLES, L=8, N_up=2, N_down=2, t=1, U=4, W=2.5, set_v=None):
         # Subtract out bias
         v -= np.sum(v) / L
 
-        E_gnd, n_gnd = hi.generate_sample(v)
+        # Calculate Ht, Hu
+        H_T, H_U = hi.calculate_Ht_and_Hu()
+
+        hi.v = v
+
+        # Calculate Hv
+        H_v = hi.calculate_Hv()
+
+        # Calculate H
+        H = hi.calculate_H()
+
+        hi.print_calculations()
+
+        # Solve ground state
+        E_gnd, n_gnd = hi.calculate_ground_state()
 
         E_gnds.append(E_gnd)
         n_gnds.append(n_gnd)
